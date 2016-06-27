@@ -3,6 +3,7 @@
 #include "compile.h"
 
 #include <iostream>
+#include <unordered_set>
 #include "dmz_olm.h"
 #include "processor_support.h"
 #include "opencv2/core/types_c.h"
@@ -65,18 +66,40 @@ dmz_card_info dmz_card_info_for_prefix_and_length(uint8_t *number_array, uint8_t
     {CardTypeDiscover,    14, 2, 36, 36},          // Diners Club (Discover)
     {CardTypeDiscover,    14, 2, 38, 39},          // Diners Club (Discover)
     {CardTypeAmex,        15, 2, 37, 37},          // AmEx
+    {CardTypeVisa,        13, 1, 4, 4},            // VISA
     {CardTypeVisa,        16, 1, 4, 4},            // VISA
+    {CardTypeVisa,        19, 1, 4, 4},            // VISA
     {CardTypeMaestro,     16, 2, 50, 50},          // Maestro
     {CardTypeMastercard,  16, 2, 51, 55},          // MasterCard
+    
+    // Due to excessive Maestro looseness, we have to include all possible prefix
+    // ranges from https://en.wikipedia.org/wiki/Payment_card_number
+    {CardTypeMaestro,     12, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     13, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     14, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     15, 2, 56, 59},          // Maestro
     {CardTypeMaestro,     16, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     17, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     18, 2, 56, 59},          // Maestro
+    {CardTypeMaestro,     19, 2, 56, 59},          // Maestro
+    
     {CardTypeDiscover,    16, 4, 6011, 6011},      // Discover
     {CardTypeMaestro,     16, 2, 61, 61},          // Maestro
     {CardTypeDiscover,    16, 2, 62, 62},          // China UnionPay (Discover)
     {CardTypeMaestro,     16, 2, 63, 63},          // Maestro
     {CardTypeDiscover,    16, 3, 644, 649},        // Discover
     {CardTypeDiscover,    16, 2, 65, 65},          // Discover
+    
+    // Again, try to cover all possible prefix ranges for Maestro
+    {CardTypeMaestro,     12, 2, 66, 69},          // Maestro
+    {CardTypeMaestro,     13, 2, 66, 69},          // Maestro
+    {CardTypeMaestro,     14, 2, 66, 69},          // Maestro
+    {CardTypeMaestro,     15, 2, 66, 69},          // Maestro
     {CardTypeMaestro,     16, 2, 66, 69},          // Maestro
-    {CardTypeMaestro,     19, 4, 6759, 6763},      // Maestro
+    {CardTypeMaestro,     17, 2, 66, 69},          // Maestro
+    {CardTypeMaestro,     18, 2, 66, 69},          // Maestro
+    {CardTypeMaestro,     19, 2, 66, 69},          // Maestro
+    
     {CardTypeDiscover,    16, 2, 88, 88},          // China UnionPay (Discover)
   };
   
@@ -85,7 +108,7 @@ dmz_card_info dmz_card_info_for_prefix_and_length(uint8_t *number_array, uint8_t
   
   if (number_length > 0) {
     dmz_card_info card_info = card_type_unrecognized;
-    int number_of_compatible_card_types = 0;
+    std::unordered_set<int> compatible_card_types;
     
     for (int i = 0; i < sizeof(card_types) / sizeof(dmz_card_info); i++) {
       dmz_card_info info = card_types[i];
@@ -111,13 +134,13 @@ dmz_card_info dmz_card_info_for_prefix_and_length(uint8_t *number_array, uint8_t
       }
       
       if (card_prefix >= (info.min_prefix / factor) && card_prefix <= (info.max_prefix / factor)) {
-        number_of_compatible_card_types++;
+        compatible_card_types.insert(info.card_type);
         card_info = info;
       }
     }
     
-    if (number_of_compatible_card_types > 0) {
-      if (number_of_compatible_card_types == 1) {
+    if (compatible_card_types.size() > 0) {
+      if (compatible_card_types.size() == 1) {
         return card_info;
       }
       else {
