@@ -134,8 +134,10 @@ dmz_card_info dmz_card_info_for_prefix_and_length(uint8_t *number_array, uint8_t
       }
       
       if (card_prefix >= (info.min_prefix / factor) && card_prefix <= (info.max_prefix / factor)) {
-        compatible_card_types.insert(info.card_type);
-        card_info = info;
+        if (compatible_card_types.find(info.card_type) == compatible_card_types.end()) {
+          compatible_card_types.insert(info.card_type);
+          card_info = info;
+        }
       }
     }
     
