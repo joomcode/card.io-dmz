@@ -86,7 +86,14 @@ dmz_card_info dmz_card_info_for_prefix_and_length(uint8_t *number_array, uint8_t
     {CardTypeDiscover,    16, 4, 6011, 6011},      // Discover
     {CardTypeMaestro,     16, 2, 61, 61},          // Maestro
     {CardTypeDiscover,    16, 2, 62, 62},          // China UnionPay (Discover)
+    
+    // At least we know that there're 16 digits and 18 digits Maestro card exist.
+    // Additional ranges may help to avoid rejecting valid cards
     {CardTypeMaestro,     16, 2, 63, 63},          // Maestro
+    {CardTypeMaestro,     17, 2, 63, 63},          // Maestro
+    {CardTypeMaestro,     18, 2, 63, 63},          // Maestro
+    {CardTypeMaestro,     19, 2, 63, 63},          // Maestro
+    
     {CardTypeDiscover,    16, 3, 644, 649},        // Discover
     {CardTypeDiscover,    16, 2, 65, 65},          // Discover
     
